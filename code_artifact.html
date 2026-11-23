@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能時代的服務交付：人機協作與有限資源配置</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Inter"', '"Noto Sans TC"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        navy: {
+                            950: '#060B19',
+                            900: '#0B132B',
+                            800: '#1C2541',
+                            700: '#3A506B',
+                        },
+                        cyan: {
+                            400: '#22D3EE',
+                            500: '#06B6D4',
+                        },
+                        amber: {
+                            400: '#FBBF24',
+                            500: '#F59E0B',
+                        },
+                        coral: {
+                            400: '#FB7185',
+                            500: '#F43F5E',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 自訂滾動條與簡報過渡動畫 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.5);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.8);
+        }
+        .slide-enter {
+            animation: slideFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes slideFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(0.995);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .glass-card {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        input[type=range] {
+            accent-color: #06B6D4;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-navy-950 text-slate-800 dark:text-slate-100 font-sans antialiased selection:bg-cyan-500 selection:text-white overflow-x-hidden transition-colors duration-300">
+
+    <!-- 頂部導覽列 -->
+    <header class="fixed top-0 left-0 right-0 z-40 h-14 bg-white/85 dark:bg-navy-900/85 glass-card border-b border-slate-200 dark:border-slate-800 px-4 lg:px-8 flex items-center justify-between transition-colors">
+        <div class="flex items-center gap-3">
+            <button onclick="toggleDrawer()" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition" title="投影片目錄">
+                <i class="fa-solid fa-bars-staggered text-lg"></i>
+            </button>
+            <div class="flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                <span class="font-bold text-sm md:text-base tracking-tight truncate max-w-[200px] sm:max-w-md md:max-w-xl">
+                    智能時代的服務交付：人機協作與有限資源配置
+                </span>
+            </div>
+        </div>
+
+        <!-- 中央快速頁籤 (大螢幕顯示) -->
+        <div class="hidden xl:flex items-center gap-1 bg-slate-100 dark:bg-navy-950/80 p-1 rounded-xl border border-slate-200/70 dark:border-slate-800" id="top-pill-nav">
+            <!-- JS 動態生成 -->
+        </div>
+
+        <!-- 右側工具按鈕 -->
+        <div class="flex items-center gap-2">
+            <button onclick="openSimulatorModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs md:text-sm font-semibold shadow-sm shadow-cyan-500/20 transition">
+                <i class="fa-solid fa-sliders"></i>
+                <span class="hidden sm:inline">邊際排序模擬器</span>
+            </button>
+            <button onclick="openRefModal()" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition text-xs md:text-sm" title="參考文獻與附錄">
+                <i class="fa-solid fa-book-open"></i>
+            </button>
+            <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition" title="切換深淺色主題">
+                <i id="theme-icon" class="fa-solid fa-sun text-amber-400"></i>
+            </button>
+            <button onclick="toggleFullscreen()" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition" title="全螢幕切換">
+                <i id="fs-icon" class="fa-solid fa-expand"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- 頂部進度條 -->
+    <div class="fixed top-14 left-0 right-0 z-40 h-1 bg-slate-200 dark:bg-slate-800">
+        <div id="progress-bar" class="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-amber-500 transition-all duration-300" style="width: 12.5%;"></div>
+    </div>
+
+    <!-- 左側目錄抽屜 (Sidebar Drawer) -->
+    <div id="drawer-backdrop" onclick="toggleDrawer()" class="fixed inset-0 bg-black/50 z-50 hidden backdrop-blur-xs transition-opacity"></div>
+    <aside id="drawer" class="fixed top-0 left-0 bottom-0 w-80 bg-white dark:bg-navy-900 z-50 border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-layer-group text-cyan-500"></i>
+                <h3 class="font-bold text-base">簡報章節目錄</h3>
+            </div>
+            <button onclick="toggleDrawer()" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawer-list" class="flex-1 overflow-y-auto p-3 space-y-1.5">
+            <!-- JS 動態生成目錄 -->
+        </div>
+        <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-950/60 text-xs text-slate-500 dark:text-slate-400 space-y-1">
+            <div class="flex justify-between"><span>快捷鍵切換：</span><span class="font-mono">← / → / Space</span></div>
+            <div class="flex justify-between"><span>模擬器開關：</span><span class="font-mono">S 鍵</span></div>
+        </div>
+    </aside>
+
+    <!-- 主簡報內容舞台 -->
+    <main class="pt-20 pb-20 px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
+        
+        <!-- ==================== SLIDE 1: 封面與核心摘要 ==================== -->
+        <section id="slide-0" class="slide-panel slide-enter space-y-6">
+            <!-- 頂部標籤與標題區 -->
+            <div class="relative rounded-3xl bg-gradient-to-br from-slate-900 via-navy-900 to-slate-900 dark:from-navy-900 dark:via-navy-800/80 dark:to-navy-950 text-white p-6 sm:p-10 border border-slate-700/60 shadow-2xl overflow-hidden">
+                <div class="absolute -right-16 -top-16 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute right-20 -bottom-20 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="flex flex-wrap items-center gap-2 mb-4">
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                        <i class="fa-solid fa-microchip mr-1"></i> 人機協作決策優化研究
+                    </span>
+                    <span class="px-3 py-1 rounded-full text-xs font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        9,911 組全枚舉驗證
+                    </span>
+                    <span class="px-3 py-1 rounded-full text-xs font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        5,000 批蒙地卡羅模擬 (Seed: 2027)
+                    </span>
+                </div>
+
+                <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight mb-4">
+                    智能時代的服務交付：<br class="hidden sm:inline">
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-amber-300">
+                        人機協作與有限資源配置
+                    </span>
+                </h1>
+
+                <p class="text-slate-300 text-sm sm:text-base lg:text-lg max-w-4xl leading-relaxed">
+                    當 AI 逐漸參與服務交付，單純依賴人工或全自動 AI 皆難以兼顧品質、效率與成本。本研究以<strong class="text-white">「每多花一單位預算能多答對幾題（邊際報酬）」</strong>為核心排序準則，在嚴格預算與人力上限下找出全局精確最優解。
+                </p>
+
+                <!-- 核心問題橫幅 -->
+                <div class="mt-6 p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 shrink-0">
+                            <i class="fa-solid fa-circle-question text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs uppercase tracking-wider text-amber-300 font-bold">Core Research Question 核心問題</div>
+                            <div class="text-sm sm:text-base font-bold text-white">
+                                一天 <span class="text-cyan-300 font-mono">200</span> 件請求、<span class="text-cyan-300 font-mono">600</span> 單位預算、最多 <span class="text-cyan-300 font-mono">20</span> 件人工複核，資源怎麼分配才能最大化答對題數？
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="goToSlide(2)" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs sm:text-sm shrink-0 transition">
+                        查看最佳方案 C <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4 張關鍵指標卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Card 1 -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                            <span>每日請求總量與構成</span>
+                            <i class="fa-solid fa-inbox text-cyan-500 text-base"></i>
+                        </div>
+                        <div class="text-3xl font-black font-mono text-slate-900 dark:text-white mb-3">
+                            200 <span class="text-sm font-normal text-slate-500">件 / 日</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1.5 text-xs">
+                        <div class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-navy-950 flex justify-between">
+                            <span>單一事實</span><span class="font-mono font-bold">80</span>
+                        </div>
+                        <div class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-navy-950 flex justify-between">
+                            <span>多條件</span><span class="font-mono font-bold">60</span>
+                        </div>
+                        <div class="px-2.5 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 flex justify-between">
+                            <span>跨來源綜合</span><span class="font-mono font-bold">50</span>
+                        </div>
+                        <div class="px-2.5 py-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-300 flex justify-between">
+                            <span>例外情形</span><span class="font-mono font-bold">10</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                            <span>三種處理通道與資源限制</span>
+                            <i class="fa-solid fa-coins text-amber-500 text-base"></i>
+                        </div>
+                        <div class="text-3xl font-black font-mono text-slate-900 dark:text-white mb-3">
+                            ≤ 600 <span class="text-sm font-normal text-slate-500">單位預算</span>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5 text-xs">
+                        <div class="flex justify-between items-center px-2.5 py-1 rounded bg-slate-100 dark:bg-navy-950">
+                            <span>1. 直接回答 (基準)</span>
+                            <span class="font-mono font-bold text-slate-600 dark:text-slate-300">1 單位/件</span>
+                        </div>
+                        <div class="flex justify-between items-center px-2.5 py-1 rounded bg-cyan-500/10 text-cyan-700 dark:text-cyan-300">
+                            <span>2. AI 升級 (+4 單位)</span>
+                            <span class="font-mono font-bold">5 單位/件</span>
+                        </div>
+                        <div class="flex justify-between items-center px-2.5 py-1 rounded bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                            <span>3. 人工複核 (上限 20 件)</span>
+                            <span class="font-mono font-bold">13 單位/件</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="p-5 rounded-2xl bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-transparent dark:from-cyan-500/15 dark:to-navy-900 border-2 border-cyan-500/50 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between text-xs font-bold text-cyan-600 dark:text-cyan-400 mb-2">
+                            <span>最佳方案 C (最佳10件人工)</span>
+                            <span class="px-2 py-0.5 rounded bg-cyan-500 text-slate-950 font-black">OPTIMAL</span>
+                        </div>
+                        <div class="text-3xl font-black font-mono text-cyan-600 dark:text-cyan-300 mb-1">
+                            178.0 <span class="text-sm font-normal text-slate-500 dark:text-slate-400">題 (89.0%)</span>
+                        </div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                            5,000 批模擬：<span class="font-mono font-semibold text-slate-700 dark:text-slate-200">178.0 ± 4.3 題</span>
+                        </div>
+                    </div>
+                    <div class="text-xs space-y-1 pt-2 border-t border-cyan-500/20 text-slate-600 dark:text-slate-300">
+                        <div class="flex justify-between"><span>例外情形 10 件：</span><strong class="text-amber-500">全交人工 (10)</strong></div>
+                        <div class="flex justify-between"><span>跨來源 50 + 多條件 20：</span><strong class="text-cyan-500">AI 升級 (70)</strong></div>
+                        <div class="flex justify-between"><span>單一 80 + 多條件 40：</span><strong>直接回答 (120)</strong></div>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                            <span>核心突破與策略效益</span>
+                            <i class="fa-solid fa-chart-line text-emerald-500 text-base"></i>
+                        </div>
+                        <div class="text-3xl font-black font-mono text-emerald-600 dark:text-emerald-400 mb-2">
+                            +9.3 <span class="text-sm font-normal text-slate-500">題 (較 B 固定20人工)</span>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5 text-xs">
+                        <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 flex justify-between">
+                            <span>較「全部直接回答 (155.0)」</span>
+                            <span class="font-mono font-bold">+23.0 題</span>
+                        </div>
+                        <div class="p-2 rounded-lg bg-blue-500/10 text-blue-700 dark:text-blue-300 flex justify-between">
+                            <span>較「A 最佳零人工 (175.5)」</span>
+                            <span class="font-mono font-bold">+2.5 題</span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400 pt-0.5">
+                            *人工只給例外案，第 11 件起報酬低於多條件升級，故<strong>閒置 10 個名額</strong>更划算！
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SLIDE 2: 任務 1 — 基準表現與邊際報酬排序 ==================== -->
+        <section id="slide-1" class="slide-panel hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-cyan-500 mb-1">Task 1 • Baseline & Marginal Return Ranking</div>
+                    <h2 class="text-2xl sm:text-3xl font-black">任務 1：全部直接回答的基準與升級邊際報酬</h2>
+                </div>
+                <div class="flex items-center gap-3 bg-slate-100 dark:bg-navy-900 px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                    <div class="text-xs text-slate-500 dark:text-slate-400">全部直接回答基準 (花費 200 / 剩 400)</div>
+                    <div class="text-xl font-black font-mono text-cyan-600 dark:text-cyan-400">155.0 題 <span class="text-xs font-normal">(77.5%)</span></div>
+                </div>
+            </div>
+
+            <!-- 基準算式說明條 -->
+            <div class="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 text-xs sm:text-sm">
+                <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 font-bold">基準期望值算式</span>
+                    <span class="font-mono text-slate-600 dark:text-slate-300">
+                        80×0.95 (76.0) + 60×0.80 (48.0) + 50×0.55 (27.5) + 10×0.35 (3.5) = <strong class="text-cyan-500">155.0 題</strong>
+                    </span>
+                </div>
+                <div class="text-slate-500 dark:text-slate-400">
+                    決策準則：<strong class="text-slate-800 dark:text-white">「每多花 1 單位預算，能多答對幾題？」</strong>按每單位增量由高到低排隊購買
+                </div>
+            </div>
+
+            <!-- 表 2 與購買排序視覺化 -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <!-- 左側：表 2 完整數據表 (7 cols) -->
+                <div class="lg:col-span-7 bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                        <h3 class="font-bold text-sm sm:text-base flex items-center gap-2">
+                            <i class="fa-solid fa-table text-cyan-500"></i>
+                            表 2：各類請求直接回答基準與升級到 AI／人工的邊際報酬
+                        </h3>
+                        <span class="text-xs text-slate-400 font-mono">單位成本：直接 1 / 升級 5 (+4) / 人工 13 (+12)</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                            <thead>
+                                <tr class="bg-slate-100 dark:bg-navy-950/70 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                    <th class="py-3 px-4">請求類型</th>
+                                    <th class="py-3 px-2 text-center">件數</th>
+                                    <th class="py-3 px-2 text-center">直接(1)</th>
+                                    <th class="py-3 px-2 text-center">升級(5)</th>
+                                    <th class="py-3 px-2 text-center">人工(13)</th>
+                                    <th class="py-3 px-3 text-right">AI 升級增量/單位</th>
+                                    <th class="py-3 px-3 text-right">人工增量/單位</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800 font-mono">
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                                    <td class="py-3.5 px-4 font-sans font-semibold">單一事實查詢</td>
+                                    <td class="py-3.5 px-2 text-center">80</td>
+                                    <td class="py-3.5 px-2 text-center">95%</td>
+                                    <td class="py-3.5 px-2 text-center">97%</td>
+                                    <td class="py-3.5 px-2 text-center">98%</td>
+                                    <td class="py-3.5 px-3 text-right text-slate-400">+0.02÷4 = 0.0050</td>
+                                    <td class="py-3.5 px-3 text-right text-slate-400">+0.03÷12 = 0.0025</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 bg-sky-500/5">
+                                    <td class="py-3.5 px-4 font-sans font-semibold">
+                                        多條件查詢
+                                        <span class="ml-1 px-1.5 py-0.5 text-[10px] rounded bg-sky-500/20 text-sky-400 font-sans">第3順位</span>
+                                    </td>
+                                    <td class="py-3.5 px-2 text-center">60</td>
+                                    <td class="py-3.5 px-2 text-center">80%</td>
+                                    <td class="py-3.5 px-2 text-center font-bold text-sky-500">90%</td>
+                                    <td class="py-3.5 px-2 text-center">95%</td>
+                                    <td class="py-3.5 px-3 text-right font-bold text-sky-500">+0.10÷4 = 0.0250</td>
+                                    <td class="py-3.5 px-3 text-right text-slate-400">+0.15÷12 = 0.0125</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 bg-cyan-500/10">
+                                    <td class="py-3.5 px-4 font-sans font-bold text-cyan-600 dark:text-cyan-300">
+                                        跨來源綜合
+                                        <span class="ml-1 px-1.5 py-0.5 text-[10px] rounded bg-cyan-500 text-slate-950 font-sans font-black">第1順位</span>
+                                    </td>
+                                    <td class="py-3.5 px-2 text-center font-bold">50</td>
+                                    <td class="py-3.5 px-2 text-center">55%</td>
+                                    <td class="py-3.5 px-2 text-center font-bold text-cyan-500">85%</td>
+                                    <td class="py-3.5 px-2 text-center">92%</td>
+                                    <td class="py-3.5 px-3 text-right font-black text-cyan-500">+0.30÷4 = 0.0750 ★</td>
+                                    <td class="py-3.5 px-3 text-right text-slate-400">+0.37÷12 = 0.0308</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 bg-amber-500/10">
+                                    <td class="py-3.5 px-4 font-sans font-bold text-amber-600 dark:text-amber-300">
+                                        例外情形
+                                        <span class="ml-1 px-1.5 py-0.5 text-[10px] rounded bg-amber-500 text-slate-950 font-sans font-black">第2順位</span>
+                                    </td>
+                                    <td class="py-3.5 px-2 text-center font-bold">10</td>
+                                    <td class="py-3.5 px-2 text-center">35%</td>
+                                    <td class="py-3.5 px-2 text-center">50%</td>
+                                    <td class="py-3.5 px-2 text-center font-bold text-amber-500">95%</td>
+                                    <td class="py-3.5 px-3 text-right text-amber-500/80">+0.15÷4 = 0.0375</td>
+                                    <td class="py-3.5 px-3 text-right font-black text-amber-500">+0.60÷12 = 0.0500 ★</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- 人工相對升級補充說明 -->
+                    <div class="p-4 bg-amber-500/10 border-t border-amber-500/20 text-xs sm:text-sm space-y-1">
+                        <div class="font-bold text-amber-600 dark:text-amber-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-star"></i> 關鍵判準：為什麼人工名額必須優先給「例外情形」？
+                        </div>
+                        <p class="text-slate-700 dark:text-slate-300 leading-relaxed">
+                            人工相對 AI 升級多花 <span class="font-mono font-bold">13 - 5 = 8</span> 單位：在<strong>例外情形</strong>可多換 (95%-50%)÷8 = <span class="font-mono font-bold text-amber-500">0.05625 題/單位</span>；但在<strong>跨來源綜合</strong>僅換 (92%-85%)÷8 = <span class="font-mono font-bold">0.00875 題/單位</span>（相差逾 <strong>6.4 倍</strong>）！
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 右側：邊際報酬排隊購買梯隊圖 (5 cols) -->
+                <div class="lg:col-span-5 bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-sm sm:text-base">
+                            <i class="fa-solid fa-arrow-down-wide-short text-cyan-500 mr-1.5"></i>
+                            每單位邊際報酬排序與預算消耗 (400 可用升級預算)
+                        </h3>
+                    </div>
+
+                    <div class="space-y-3 text-xs">
+                        <!-- Rank 1 -->
+                        <div class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30">
+                            <div class="flex justify-between font-bold text-cyan-600 dark:text-cyan-300 mb-1">
+                                <span>#1 跨來源綜合 → AI 升級 (買滿 50 件)</span>
+                                <span class="font-mono">0.0750 題/元</span>
+                            </div>
+                            <div class="w-full bg-slate-200 dark:bg-navy-950 h-2.5 rounded-full overflow-hidden mb-1.5">
+                                <div class="bg-cyan-500 h-full rounded-full" style="width: 100%"></div>
+                            </div>
+                            <div class="flex justify-between text-slate-500 dark:text-slate-400 font-mono">
+                                <span>花費：50 × 4 = 200 元 (累計 200/400)</span>
+                                <span class="text-cyan-500 font-bold">答對 +15.0 題</span>
+                            </div>
+                        </div>
+
+                        <!-- Rank 2 -->
+                        <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                            <div class="flex justify-between font-bold text-amber-600 dark:text-amber-300 mb-1">
+                                <span>#2 例外情形 → 人工複核 (買滿 10 件)</span>
+                                <span class="font-mono">0.0500 題/元 (相對AI 0.0563)</span>
+                            </div>
+                            <div class="w-full bg-slate-200 dark:bg-navy-950 h-2.5 rounded-full overflow-hidden mb-1.5">
+                                <div class="bg-amber-500 h-full rounded-full" style="width: 75%"></div>
+                            </div>
+                            <div class="flex justify-between text-slate-500 dark:text-slate-400 font-mono">
+                                <span>花費：10 × 12 = 120 元 (累計 320/400)</span>
+                                <span class="text-amber-500 font-bold">答對 +6.0 題</span>
+                            </div>
+                        </div>
+
+                        <!-- Rank 3 -->
+                        <div class="p-3 rounded-xl bg-sky-500/10 border border-sky-500/30">
+                            <div class="flex justify-between font-bold text-sky-600 dark:text-sky-300 mb-1">
+                                <span>#3 多條件查詢 → AI 升級 (買 20 件用盡預算)</span>
+                                <span class="font-mono">0.0250 題/元</span>
+                            </div>
+                            <div class="w-full bg-slate-200 dark:bg-navy-950 h-2.5 rounded-full overflow-hidden mb-1.5">
+                                <div class="bg-sky-500 h-full rounded-full" style="width: 33.3%"></div>
+                            </div>
+                            <div class="flex justify-between text-slate-500 dark:text-slate-400 font-mono">
+                                <span>花費：20 × 4 = 80 元 (累計 400/400 滿)</span>
+                                <span class="text-sky-500 font-bold">答對 +2.0 題</span>
+                            </div>
+                        </div>
+
+                        <!-- Cutoff Line -->
+                        <div class="flex items-center gap-2 py-1">
+                            <div class="flex-1 border-t border-dashed border-coral-500"></div>
+                            <span class="text-[11px] font-bold text-coral-500 px-2 py-0.5 rounded bg-coral-500/10">
+                                600 元預算截止線 (總增量 +23.0 題 → 178.0 題)
+                            </span>
+                            <div class="flex-1 border-t border-dashed border-coral-500"></div>
+                        </div>
+
+                        <!-- Below Cutoff -->
+                        <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-navy-950/60 text-slate-400 flex justify-between items-center">
+                            <span>不買：跨來源 AI→人工 (+0.07÷8)</span>
+                            <span class="font-mono">0.00875 題/元 (過低)</span>
+                        </div>
+                        <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-navy-950/60 text-slate-400 flex justify-between items-center">
+                            <span>不買：單一事實 → AI 升級 (+0.02÷4)</span>
+                            <span class="font-mono">0.00500 題/元 (過低)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SLIDE 3: 任務 2 — 最優配置模型與結果 (Plan C) ==================== -->
+        <section id="slide-2" class="slide-panel hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-cyan-500 mb-1">Task 2 • Optimal Allocation Model & Exact Solution</div>
+                    <h2 class="text-2xl sm:text-3xl font-black">任務 2：最優配置模型與結果（C 最佳10件人工）</h2>
+                </div>
+                <div class="flex items-center gap-2 text-xs font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 px-3.5 py-2 rounded-xl border border-emerald-500/30">
+                    <i class="fa-solid fa-check-double"></i>
+                    <span>9,911 種人工名額分配組合全枚舉核對 = 全局精確最優解</span>
+                </div>
+            </div>
+
+            <!-- 數學規劃模型列 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800">
+                    <div class="text-xs font-bold text-cyan-500 uppercase mb-1">決策變數與目標函數</div>
+                    <div class="font-mono text-sm font-bold text-slate-900 dark:text-white mb-1">
+                        Max Σ p(t, o) · x(t, o)
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        <span class="font-mono">x(t,o)</span> 為第 <span class="font-mono">t</span> 類請求採用第 <span class="font-mono">o</span> 種處理（直接、升級、人工）之非負整數件數。
+                    </p>
+                </div>
+                <div class="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800">
+                    <div class="text-xs font-bold text-amber-500 uppercase mb-1">三大硬性約束條件</div>
+                    <div class="font-mono text-xs space-y-1 text-slate-700 dark:text-slate-200">
+                        <div>1. 件數守恆：<span class="text-cyan-500">Σ x(t,o) = n(t)</span> (共 200 件)</div>
+                        <div>2. 預算上限：<span class="text-amber-500">1·x(直) + 5·x(升) + 13·x(人) ≤ 600</span></div>
+                        <div>3. 人工上限：<span class="text-coral-400">Σ x(t, 人工) ≤ 20</span></div>
+                    </div>
+                </div>
+                <div class="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800">
+                    <div class="text-xs font-bold text-emerald-500 uppercase mb-1">為什麼只用 10 件人工、留 10 件閒置？</div>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        例外案僅 10 件。第 11 件人工候選（跨來源綜合）每單位僅換 <span class="font-mono font-bold">0.00875</span> 題，低於把同筆錢拿去升級多條件查詢的 <span class="font-mono font-bold text-cyan-500">0.025</span> 題！
+                    </p>
+                </div>
+            </div>
+
+            <!-- 表 3 與配置視覺條 -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- 表 3 -->
+                <div class="lg:col-span-7 bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                        <h3 class="font-bold text-sm sm:text-base">
+                            <i class="fa-solid fa-table-list text-cyan-500 mr-1.5"></i>
+                            表 3：C「最佳10件人工」最優配置明細表
+                        </h3>
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-cyan-500/20 text-cyan-400">總成本 600 / 人工 10 件</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                            <thead>
+                                <tr class="bg-slate-100 dark:bg-navy-950/70 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                    <th class="py-3 px-4">請求類型</th>
+                                    <th class="py-3 px-3 text-center">總件數</th>
+                                    <th class="py-3 px-3 text-center">直接回答 (1元)</th>
+                                    <th class="py-3 px-3 text-center text-cyan-500">AI 升級 (5元)</th>
+                                    <th class="py-3 px-3 text-center text-amber-500">人工複核 (13元)</th>
+                                    <th class="py-3 px-4 text-right">期望答對題數</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800 font-mono">
+                                <tr>
+                                    <td class="py-3.5 px-4 font-sans font-semibold">單一事實查詢</td>
+                                    <td class="py-3.5 px-3 text-center">80</td>
+                                    <td class="py-3.5 px-3 text-center font-bold">80</td>
+                                    <td class="py-3.5 px-3 text-center text-slate-400">0</td>
+                                    <td class="py-3.5 px-3 text-center text-slate-400">0</td>
+                                    <td class="py-3.5 px-4 text-right font-bold">76.0 <span class="text-[11px] text-slate-400 font-normal">(80×95%)</span></td>
+                                </tr>
+                                <tr class="bg-sky-500/5">
+                                    <td class="py-3.5 px-4 font-sans font-semibold">多條件查詢</td>
+                                    <td class="py-3.5 px-3 text-center">60</td>
+                                    <td class="py-3.5 px-3 text-center font-bold">40</td>
+                                    <td class="py-3.5 px-3 text-center font-bold text-cyan-500">20</td>
+                                    <td class="py-3.5 px-3 text-center text-slate-400">0</td>
+                                    <td class="py-3.5 px-4 text-right font-bold">50.0 <span class="text-[11px] text-slate-400 font-normal">(32.0+18.0)</span></td>
+                                </tr>
+                                <tr class="bg-cyan-500/10">
+                                    <td class="py-3.5 px-4 font-sans font-bold text-cyan-600 dark:text-cyan-300">跨來源綜合</td>
+                                    <td class="py-3.5 px-3 text-center">50</td>
+                                    <td class="py-3.5 px-3 text-center text-slate-400">0</td>
+                                    <td class="py-3.5 px-3 text-center font-black text-cyan-500">50</td>
+                                    <td class="py-3.5 px-3 text-center text-slate-400">0</td>
+                                    <td class="py-3.5 px-4 text-right font-bold text-cyan-500">42.5 <span class="text-[11px] text-slate-400 font-normal">(50×85%)</span></td>
+                                </tr>
+                                <tr class="bg-amber-500/10">
+                                    <td class="py-3.5 px-4 font-sans font-bold text-amber-600 dark:text-amber-300">例外情形</td>
+                                    <td class="py-3.5 px-3 text-center">10</td>
+                                    <td class="py-3.5 px-3 text-center text-slate-400">0</td>
+                                    <td class="py-3.5 px-3 text-center text-slate-400">0</td>
+                                    <td class="py-3.5 px-3 text-center font-black text-amber-500">10</td>
+                                    <td class="py-3.5 px-4 text-right font-bold text-amber-500">9.5 <span class="text-[11px] text-slate-400 font-normal">(10×95%)</span></td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-slate-100 dark:bg-navy-950 font-bold border-t-2 border-slate-300 dark:border-slate-700 font-mono">
+                                    <td class="py-3.5 px-4 font-sans">合計 (成本 600)</td>
+                                    <td class="py-3.5 px-3 text-center">200 件</td>
+                                    <td class="py-3.5 px-3 text-center">120 件 (120元)</td>
+                                    <td class="py-3.5 px-3 text-center text-cyan-500">70 件 (350元)</td>
+                                    <td class="py-3.5 px-3 text-center text-amber-500">10 件 (130元)</td>
+                                    <td class="py-3.5 px-4 text-right text-lg text-emerald-500">178.0 題</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 右側：資源與件數佔比視覺化 (5 cols) -->
+                <div class="lg:col-span-5 bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between space-y-5">
+                    <div>
+                        <h3 class="font-bold text-sm sm:text-base mb-3">
+                            <i class="fa-solid fa-chart-pie text-amber-500 mr-1.5"></i>
+                            C 方案：件數分佈 vs. 預算結構對比
+                        </h3>
+
+                        <!-- Bar 1: 件數分佈 (200件) -->
+                        <div class="space-y-1.5 mb-4">
+                            <div class="flex justify-between text-xs font-semibold">
+                                <span>每日 200 件處理通道分佈</span>
+                                <span class="font-mono text-slate-400">60% 直接 / 35% AI / 5% 人工</span>
+                            </div>
+                            <div class="h-6 w-full rounded-xl overflow-hidden flex font-mono text-[11px] font-bold text-white">
+                                <div class="bg-slate-500 flex items-center justify-center" style="width: 60%">直接 120</div>
+                                <div class="bg-cyan-500 text-slate-950 flex items-center justify-center" style="width: 35%">AI 升級 70</div>
+                                <div class="bg-amber-500 text-slate-950 flex items-center justify-center" style="width: 5%">10</div>
+                            </div>
+                        </div>
+
+                        <!-- Bar 2: 預算分佈 (600單位) -->
+                        <div class="space-y-1.5 mb-4">
+                            <div class="flex justify-between text-xs font-semibold">
+                                <span>每日 600 單位預算投入分佈</span>
+                                <span class="font-mono text-slate-400">20% 直接 / 58.3% AI / 21.7% 人工</span>
+                            </div>
+                            <div class="h-6 w-full rounded-xl overflow-hidden flex font-mono text-[11px] font-bold text-white">
+                                <div class="bg-slate-500 flex items-center justify-center" style="width: 20%">120元</div>
+                                <div class="bg-cyan-500 text-slate-950 flex items-center justify-center" style="width: 58.3%">AI 升級 350元</div>
+                                <div class="bg-amber-500 text-slate-950 flex items-center justify-center" style="width: 21.7%">人工 130元</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 與兩個基準對照卡 -->
+                    <div class="space-y-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
+                        <div class="text-xs font-bold text-slate-400 uppercase">與兩大基準方案直接對照</div>
+                        <div class="p-3 rounded-xl bg-slate-100 dark:bg-navy-950 flex items-center justify-between">
+                            <div class="text-xs">
+                                <div class="font-bold">對照 1：全部直接回答 (花 200 元)</div>
+                                <div class="text-slate-500">預期答對 155.0 題</div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 font-mono font-bold text-xs">
+                                C 多 +23.0 題
+                            </span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-100 dark:bg-navy-950 flex items-center justify-between">
+                            <div class="text-xs">
+                                <div class="font-bold">對照 2：A 最佳零人工 (花 600 元)</div>
+                                <div class="text-slate-500">跨來源50 + 例外10 + 多條件40 全走 AI 升級 (175.5 題)</div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-400 font-mono font-bold text-xs">
+                                C 多 +2.5 題
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SLIDE 4: 邊際轉換對決 A vs C 與三種直覺方案 ==================== -->
+        <section id="slide-3" class="slide-panel hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-amber-500 mb-1">Marginal Trade-off Analysis • Plan A vs. Plan C</div>
+                    <h2 class="text-2xl sm:text-3xl font-black">邊際轉換對決：同為 600 元，為何 C 勝過 A？</h2>
+                </div>
+                <div class="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400">
+                    決定結果的是<strong class="text-cyan-400">「每一元落在哪條通道」</strong>，而非總預算本身
+                </div>
+            </div>
+
+            <!-- 表 1：A -> C 的兩筆 80 元邊際賬 -->
+            <div class="bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                    <h3 class="font-bold text-base flex items-center gap-2">
+                        <i class="fa-solid fa-scale-balanced text-amber-500"></i>
+                        表 1　A → C：同為 600 元的兩案（A 最佳零人工 175.5 題 → C 最佳10件人工 178.0 題），差在兩筆 80 元邊際賬
+                    </h3>
+                    <span class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-400 shrink-0">
+                        淨支出 0 元 / 淨增 +2.5 題
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+                    <!-- 第一筆：花錢 -->
+                    <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-300 mb-2">
+                                <span>第一筆賬：花錢買高報酬通道</span>
+                                <span class="font-mono px-2 py-0.5 rounded bg-emerald-500/20">0.056 題/元</span>
+                            </div>
+                            <div class="font-bold text-base mb-1">10 件例外：AI 升級 → 改交人工</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">
+                                成功率由 <span class="font-mono font-bold">50% → 95%</span>，每件多付 <span class="font-mono">13 - 5 = 8</span> 元。
+                            </p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-emerald-500/20 flex justify-between items-center font-mono">
+                            <span class="text-xs text-coral-400 font-bold">預算：+80 元</span>
+                            <span class="text-lg font-black text-emerald-500">答對：+4.5 題</span>
+                        </div>
+                    </div>
+
+                    <!-- 第二筆：省錢 -->
+                    <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between text-xs font-bold text-amber-600 dark:text-amber-300 mb-2">
+                                <span>第二筆賬：省錢砍低報酬通道</span>
+                                <span class="font-mono px-2 py-0.5 rounded bg-amber-500/20">0.025 題/元</span>
+                            </div>
+                            <div class="font-bold text-base mb-1">20 件多條件：AI 升級 → 改回直接</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">
+                                為守住 600 元上限，從 A 原 40 件多條件升級撥出 20 件退回直接回答（<span class="font-mono font-bold">90% → 80%</span>），每件省 <span class="font-mono">5 - 1 = 4</span> 元。
+                            </p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-amber-500/20 flex justify-between items-center font-mono">
+                            <span class="text-xs text-emerald-400 font-bold">預算：-80 元</span>
+                            <span class="text-lg font-black text-coral-400">答對：-2.0 題</span>
+                        </div>
+                    </div>
+
+                    <!-- 合計結果 -->
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-cyan-500/15 to-blue-600/10 border-2 border-cyan-500/40 flex flex-col justify-between">
+                        <div>
+                            <div class="text-xs font-bold text-cyan-400 uppercase mb-2">合計淨效益 (A → C)</div>
+                            <div class="font-bold text-base mb-1">一來一往，同筆 80 元換位配置</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                同樣 80 單位，放在例外人工換回 <strong>+4.5 題</strong>，砍在多條件升級只賠 <strong>-2.0 題</strong>。
+                            </p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-cyan-500/30 flex justify-between items-center font-mono">
+                            <span class="text-xs font-bold">總預算：±0 元 (600)</span>
+                            <span class="text-xl font-black text-cyan-400">淨增：+2.5 題 ★</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 三種直覺預算方案的優缺點診斷 -->
+            <div>
+                <h3 class="font-bold text-sm sm:text-base mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass-chart text-cyan-500"></i>
+                    三種常見直覺投入方案的診斷與對比
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- 方案 1 -->
+                    <div class="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-xs font-bold">直覺方案一</span>
+                            <span class="font-mono text-xs text-slate-400">低 AI 算力 + 重度人工</span>
+                        </div>
+                        <div class="font-bold text-base">只投入 128 元購買 AI 算力</div>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                            AI 僅做初篩與格式檢查，人工充足、把控力強。但人工單位成本高達 13 元，若任務有大量簡單標準化個案，寶貴人工時間會消耗在低難度工作上，適用場景較窄。
+                        </p>
+                    </div>
+
+                    <!-- 方案 2 -->
+                    <div class="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-0.5 rounded-md bg-blue-500/20 text-blue-400 text-xs font-bold">直覺方案二 (基準 B)</span>
+                            <span class="font-mono text-xs text-blue-400">固定用滿 20 件人工</span>
+                        </div>
+                        <div class="font-bold text-base">B 固定20件人工 + 約 300 元 AI</div>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                            20 件人工 + 40 件 AI 升級 + 140 件直接回答（模擬得 <strong class="font-mono">168.7 題</strong>）。表現中規中矩，但因強行用滿 20 件人工，把後 10 件人工花在邊際報酬極低的類別，排擠了高報酬的 AI 升級預算。
+                        </p>
+                    </div>
+
+                    <!-- 方案 3 -->
+                    <div class="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-0.5 rounded-md bg-coral-500/20 text-coral-400 text-xs font-bold">直覺方案三 (如方案 A)</span>
+                            <span class="font-mono text-xs text-coral-400">全自動 AI 無人工兜底</span>
+                        </div>
+                        <div class="font-bold text-base">600 元全部投入 AI（零人工）</div>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                            前期處理速度快（A 最佳零人工得 <strong class="font-mono">175.5 題</strong>），但面對模糊與例外案例（AI 僅 50% vs 人工 95%），缺乏人工複核兜底，且無法整理錯誤形成持續優化閉環。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SLIDE 5: 任務 3 — 5,000 批情境模擬與基準對比 ==================== -->
+        <section id="slide-4" class="slide-panel hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-cyan-500 mb-1">Task 3 • Monte Carlo Simulation (5,000 Batches, Seed 2027)</div>
+                    <h2 class="text-2xl sm:text-3xl font-black">任務 3：5,000 批情境模擬與基準對比（數據方式 A）</h2>
+                </div>
+                <div class="flex items-center gap-2 text-xs bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 px-3.5 py-2 rounded-xl border border-cyan-500/30 font-mono">
+                    <span>B → C 成對比較：平均多 <strong>+9.3 題</strong> (SD 3.4, 95% CI [2, 16], <strong>勝率 99.2%</strong>)</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                <!-- 左側：圖 1 SVG 誤差線長條圖 (5 cols) -->
+                <div class="lg:col-span-5 bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-bold text-sm sm:text-base">
+                                <i class="fa-solid fa-chart-column text-cyan-500 mr-1"></i>
+                                圖 1：四種策略答對數（平均與 95% 區間）
+                            </h3>
+                            <span class="text-[11px] font-mono text-slate-400">5,000 批 × 200 件</span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                            誤差線 (Error Bars) 顯示第 2.5 與 97.5 百分位數（寬度約 20 題）。
+                        </p>
+                    </div>
+
+                    <!-- 高精準度 SVG 重現圖 1 -->
+                    <div class="w-full overflow-hidden">
+                        <svg viewBox="0 0 460 280" class="w-full h-auto select-none">
+                            <!-- 背景網格線 (Y: 140 到 190, 每 10 題高度 40px, Y=190 在 y=30, Y=140 在 y=230) -->
+                            <g stroke="currentColor" class="text-slate-200 dark:text-slate-800" stroke-width="1">
+                                <line x1="45" y1="30" x2="440" y2="30" />
+                                <line x1="45" y1="70" x2="440" y2="70" />
+                                <line x1="45" y1="110" x2="440" y2="110" />
+                                <line x1="45" y1="150" x2="440" y2="150" />
+                                <line x1="45" y1="190" x2="440" y2="190" />
+                                <line x1="45" y1="230" x2="440" y2="230" stroke-width="1.5" class="text-slate-400 dark:text-slate-600" />
+                            </g>
+
+                            <!-- Y 軸刻度文字 -->
+                            <g fill="currentColor" class="text-slate-500 dark:text-slate-400 font-mono text-[11px]" text-anchor="end">
+                                <text x="38" y="34">190</text>
+                                <text x="38" y="74">180</text>
+                                <text x="38" y="114">170</text>
+                                <text x="38" y="154">160</text>
+                                <text x="38" y="194">150</text>
+                                <text x="38" y="234">140</text>
+                            </g>
+                            <text x="45" y="16" fill="currentColor" class="text-slate-500 dark:text-slate-400 text-[11px] font-bold">預期答對數 (題)</text>
+
+                            <!-- Bar 1: 全部直接回答 (Mean 155.0 -> y=170, CI 144-165 -> y=214 to 130) -->
+                            <g>
+                                <rect x="65" y="170" width="56" height="60" rx="4" fill="#94A3B8" opacity="0.85" />
+                                <!-- Error bar 144(y=214) to 165(y=130) -->
+                                <line x1="93" y1="130" x2="93" y2="214" stroke="#F8FAFC" class="stroke-slate-800 dark:stroke-white" stroke-width="2" />
+                                <line x1="81" y1="130" x2="105" y2="130" stroke="#F8FAFC" class="stroke-slate-800 dark:stroke-white" stroke-width="2" />
+                                <line x1="81" y1="214" x2="105" y2="214" stroke="#F8FAFC" class="stroke-slate-800 dark:stroke-white" stroke-width="2" />
+                                <text x="93" y="164" text-anchor="middle" fill="currentColor" class="text-slate-800 dark:text-white font-mono text-xs font-bold">155.0</text>
+                                <text x="93" y="252" text-anchor="middle" fill="currentColor" class="text-slate-600 dark:text-slate-300 text-[11px] font-semibold">全部直接</text>
+                            </g>
+
+                            <!-- Bar 2: 預算內隨機升級 (Mean 163.2 -> y=137.2, CI 153-173 -> y=178 to 98) -->
+                            <g>
+                                <rect x="160" y="137.2" width="56" height="92.8" rx="4" fill="#64748B" opacity="0.9" />
+                                <line x1="188" y1="98" x2="188" y2="178" class="stroke-slate-800 dark:stroke-white" stroke-width="2" />
+                                <line x1="176" y1="98" x2="200" y2="98" class="stroke-slate-800 dark:stroke-white" stroke-width="2" />
+                                <line x1="176" y1="178" x2="200" y2="178" class="stroke-slate-800 dark:stroke-white" stroke-width="2" />
+                                <text x="188" y="131" text-anchor="middle" fill="currentColor" class="text-slate-800 dark:text-white font-mono text-xs font-bold">163.2</text>
+                                <text x="188" y="252" text-anchor="middle" fill="currentColor" class="text-slate-600 dark:text-slate-300 text-[11px] font-semibold">隨機升級</text>
+                            </g>
+
+                            <!-- Bar 3: B 固定20件人工 (Mean 168.7 -> y=115.2, CI 160-178 -> y=150 to 78) -->
+                            <g>
+                                <rect x="255" y="115.2" width="56" height="114.8" rx="4" fill="#3B82F6" opacity="0.85" />
+                                <line x1="283" y1="78" x2="283" y2="150" class="stroke-slate-800 dark:stroke-white" stroke-width="2" />
+                                <line x1="271" y1="78" x2="295" y2="78" class="stroke-slate-800 dark:stroke-white" stroke-width="2" />
+                                <line x1="271" y1="150" x2="295" y2="150" class="stroke-slate-800 dark:stroke-white" stroke-width="2" />
+                                <text x="283" y="109" text-anchor="middle" fill="currentColor" class="text-blue-600 dark:text-blue-300 font-mono text-xs font-bold">168.7</text>
+                                <text x="283" y="252" text-anchor="middle" fill="currentColor" class="text-slate-600 dark:text-slate-300 text-[11px] font-semibold">B 固定20人工</text>
+                            </g>
+
+                            <!-- Bar 4: C 最佳10件人工 (Mean 178.0 -> y=78, CI 169-186 -> y=114 to 46) -->
+                            <g>
+                                <rect x="350" y="78" width="56" height="152" rx="4" fill="#06B6D4" />
+                                <line x1="378" y1="46" x2="378" y2="114" class="stroke-slate-900 dark:stroke-amber-300" stroke-width="2.5" />
+                                <line x1="366" y1="46" x2="390" y2="46" class="stroke-slate-900 dark:stroke-amber-300" stroke-width="2.5" />
+                                <line x1="366" y1="114" x2="390" y2="114" class="stroke-slate-900 dark:stroke-amber-300" stroke-width="2.5" />
+                                <text x="378" y="70" text-anchor="middle" fill="currentColor" class="text-cyan-600 dark:text-cyan-300 font-mono text-sm font-black">178.0</text>
+                                <text x="378" y="252" text-anchor="middle" fill="currentColor" class="text-cyan-600 dark:text-cyan-300 text-[11px] font-bold">C 最佳10人工</text>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-navy-950 p-2.5 rounded-xl">
+                        <strong>為什麼選方式 A 而非 RouterBench (方式 B)？</strong> 題目參數已完整可校準，使任務 1–3 結論能嚴密互相比對，避免通用問答路由的領域差異混入策略比較。
+                    </div>
+                </div>
+
+                <!-- 右側：表 5 數據與三大關鍵洞察 (7 cols) -->
+                <div class="lg:col-span-7 flex flex-col justify-between space-y-4">
+                    <div class="bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                            <h3 class="font-bold text-sm sm:text-base">
+                                <i class="fa-solid fa-table text-cyan-500 mr-1.5"></i>
+                                表 5：四種策略在 5,000 批模擬中的表現（每批 200 件，種子 2027）
+                            </h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                                <thead>
+                                    <tr class="bg-slate-100 dark:bg-navy-950/70 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                        <th class="py-3 px-4">策略名稱與定義</th>
+                                        <th class="py-3 px-3 text-center">平均答對</th>
+                                        <th class="py-3 px-2 text-center">標準差</th>
+                                        <th class="py-3 px-3 text-center">95% 區間</th>
+                                        <th class="py-3 px-3 text-center">花費</th>
+                                        <th class="py-3 px-4 text-right">每元答對</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200 dark:divide-slate-800 font-mono">
+                                    <tr>
+                                        <td class="py-3 px-4 font-sans font-semibold">
+                                            1. 全部直接回答
+                                            <div class="text-[11px] text-slate-400 font-normal">200 件全走直接回答</div>
+                                        </td>
+                                        <td class="py-3 px-3 text-center font-bold">155.0</td>
+                                        <td class="py-3 px-2 text-center">5.3</td>
+                                        <td class="py-3 px-3 text-center">144–165</td>
+                                        <td class="py-3 px-3 text-center">200 元</td>
+                                        <td class="py-3 px-4 text-right font-bold text-emerald-500">0.775</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-3 px-4 font-sans font-semibold">
+                                            2. 預算內隨機升級
+                                            <div class="text-[11px] text-slate-400 font-normal">權重 0.55/0.30/0.15 隨機指派 (種子7)</div>
+                                        </td>
+                                        <td class="py-3 px-3 text-center font-bold">163.2</td>
+                                        <td class="py-3 px-2 text-center">4.9</td>
+                                        <td class="py-3 px-3 text-center">153–173</td>
+                                        <td class="py-3 px-3 text-center">600 元</td>
+                                        <td class="py-3 px-4 text-right text-slate-400">0.272</td>
+                                    </tr>
+                                    <tr class="bg-blue-500/5">
+                                        <td class="py-3 px-4 font-sans font-semibold text-blue-600 dark:text-blue-300">
+                                            3. B 固定20件人工
+                                            <div class="text-[11px] text-slate-400 font-normal">20 人工 + 40 多條件升級 + 140 直接</div>
+                                        </td>
+                                        <td class="py-3 px-3 text-center font-bold text-blue-500">168.7</td>
+                                        <td class="py-3 px-2 text-center">4.6</td>
+                                        <td class="py-3 px-3 text-center">160–178</td>
+                                        <td class="py-3 px-3 text-center">600 元</td>
+                                        <td class="py-3 px-4 text-right text-blue-400">0.281</td>
+                                    </tr>
+                                    <tr class="bg-cyan-500/15">
+                                        <td class="py-3 px-4 font-sans font-bold text-cyan-600 dark:text-cyan-300">
+                                            4. C 最佳10件人工 ★
+                                            <div class="text-[11px] text-cyan-600/80 dark:text-cyan-300/80 font-normal">10 例外人工 + 50 跨來源AI + 20 多條件AI</div>
+                                        </td>
+                                        <td class="py-3 px-3 text-center font-black text-lg text-cyan-500">178.0</td>
+                                        <td class="py-3 px-2 text-center font-bold">4.3</td>
+                                        <td class="py-3 px-3 text-center font-bold">169–186</td>
+                                        <td class="py-3 px-3 text-center">600 元</td>
+                                        <td class="py-3 px-4 text-right font-bold text-cyan-400">0.297</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 三大關鍵洞察卡片 -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800">
+                            <div class="text-xs font-bold text-cyan-500 mb-1"><i class="fa-solid fa-trophy mr-1"></i> 同花 600 元顯著勝出</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                C 比隨機升級多 <strong class="font-mono">+14.8 題</strong>，比 B 固定20人工多 <strong class="font-mono">+9.3 題</strong>，且標準差最小 (4.3)。
+                            </p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800">
+                            <div class="text-xs font-bold text-amber-500 mb-1"><i class="fa-solid fa-scale-unbalanced mr-1"></i> 誠實揭露邊際遞減</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                全部直接回答只花 200 元，每元答對 <strong class="font-mono">0.775</strong>；加錢到 600 元時每元答對降至 <strong class="font-mono">0.297</strong>，邊際效益遞減。
+                            </p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800">
+                            <div class="text-xs font-bold text-coral-400 mb-1"><i class="fa-solid fa-wave-square mr-1"></i> 單日噪聲與評估準則</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                單日標準差約 4~5 題（95% 區間寬 20 題），單看一天報表分不出真假，必須看<strong>多批均值</strong>！
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SLIDE 6: 情景分析 — 四個變動軸與互動模擬 ==================== -->
+        <section id="slide-5" class="slide-panel hidden space-y-5">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-3">
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-amber-500 mb-1">Scenario Analysis (S1–S4) & Management Exit Rule</div>
+                    <h2 class="text-2xl sm:text-3xl font-black">情景分析：四個變動軸的動態重算（表 6）</h2>
+                </div>
+                <button onclick="openSimulatorModal()" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-2 self-start md:self-auto transition shadow-md">
+                    <i class="fa-solid fa-calculator"></i> 開啟互動式邊際排序模擬器
+                </button>
+            </div>
+
+            <!-- 表 6 與四張情景深度解析卡 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- S1 -->
+                <div class="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-between space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-coral-500/20 text-coral-400">S1 減預算</span>
+                            <span class="font-mono text-xs text-slate-400">600 → 400 元</span>
+                        </div>
+                        <div class="text-base font-bold mb-1">先斷的是錢：人工最先出局</div>
+                        <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-navy-950 text-xs font-mono mb-2">
+                            重算配置：<strong class="text-cyan-400">跨來源 50 AI、零人工</strong> (其餘 150 直接)
+                        </div>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                            人工複核最貴（+12元），預算一砍最先出局。400 元時退化為「只買跨來源 AI 升級」單通道策略。錢不夠時不必談人機比例，先守住每元最划算的通道。
+                        </p>
+                    </div>
+                    <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center font-mono">
+                        <span class="text-xs text-slate-400">全直接: 155.0</span>
+                        <span class="text-base font-black text-cyan-400">預期答對: 170.0 題</span>
+                    </div>
+                </div>
+
+                <!-- S2 -->
+                <div class="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-between space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-500/20 text-amber-400">S2 減人工名額</span>
+                            <span class="font-mono text-xs text-slate-400">20 → 5 件</span>
+                        </div>
+                        <div class="text-base font-bold mb-1">先斷的是人：帳面微損但藏尾部風險</div>
+                        <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-navy-950 text-xs font-mono mb-2">
+                            重算配置：<strong class="text-amber-400">例外 5人工+5AI</strong>、跨來源 50AI、多條件 30AI
+                        </div>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                            5 件名額覆蓋一半例外，另一半退回 AI 升級（0.0375 仍划算），省下的錢多買 10 件多條件 AI。帳面僅少 1.25 題，但真正損失是<strong>邊界誤判無人修正的尾部風險</strong>。
+                        </p>
+                    </div>
+                    <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center font-mono">
+                        <span class="text-xs text-slate-400">較基準 -1.25</span>
+                        <span class="text-base font-black text-amber-400">預期答對: 176.75 題</span>
+                    </div>
+                </div>
+
+                <!-- S3 -->
+                <div class="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-between space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-purple-500/20 text-purple-400">S3 例外暴增</span>
+                            <span class="font-mono text-xs text-slate-400">例外 10 → 40 件</span>
+                        </div>
+                        <div class="text-base font-bold mb-1">組合突變：用滿20人工，例外優先仍成立</div>
+                        <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-navy-950 text-xs font-mono mb-2">
+                            重算配置：<strong class="text-purple-400">例外 20人工+20直接</strong>、跨來源 40AI
+                        </div>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                            其餘請求為 60/60/40。20 件人工用滿後，另 20 件例外只做直接回答（若再升級要多花 80 變成 680 超支！）。雖降為 165.0 題，但全直接僅 141.0 題，仍多出 <strong>+24.0 題</strong>。
+                        </p>
+                    </div>
+                    <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center font-mono">
+                        <span class="text-xs text-slate-400">全直接: 141.0</span>
+                        <span class="text-base font-black text-purple-400">預期答對: 165.0 題</span>
+                    </div>
+                </div>
+
+                <!-- S4 -->
+                <div class="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-between space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-400">S4 AI 變強</span>
+                            <span class="font-mono text-xs text-slate-400">例外 AI 50% → 80%</span>
+                        </div>
+                        <div class="text-base font-bold mb-1">能力變化：人工全面撤出通道</div>
+                        <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-navy-950 text-xs font-mono mb-2">
+                            重算配置：<strong class="text-emerald-400">例外 10AI、跨來源 50AI、多條件 40AI、零人工</strong>
+                        </div>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                            當例外案 AI 升至 80%，人工相對 AI 的邊際報酬降至 <span class="font-mono">(0.95-0.80)÷8 = 0.01875</span>，低於多條件 AI 的 <span class="font-mono">0.025</span>，最優解將人工全部撤出！
+                        </p>
+                    </div>
+                    <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center font-mono">
+                        <span class="text-xs text-slate-400">較基準 +0.5</span>
+                        <span class="text-base font-black text-emerald-400">預期答對: 178.5 題</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 黃金管理退出線公式橫幅 -->
+            <div class="p-5 rounded-2xl bg-gradient-to-r from-navy-900 via-slate-900 to-navy-900 text-white border border-amber-500/40 shadow-lg flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-0.5 rounded bg-amber-500 text-slate-950 font-black text-xs">MANAGEMENT GOLDEN RULE</span>
+                        <h3 class="font-bold text-base sm:text-lg text-amber-300">人工退出通道的黃金管理法則（可直接寫進管理制度）</h3>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-300">
+                        四個情景指向同一條規律：排序比的不是「AI 還是人」，而是「這一元的邊際報酬」。管理者不必死記固定比例，只需每季重跑排序並監控退出線：
+                    </p>
+                </div>
+                <div class="px-5 py-3 rounded-xl bg-black/40 border border-amber-400/50 font-mono text-xs sm:text-sm shrink-0">
+                    <div class="text-slate-400 text-[11px] mb-0.5">人工在例外案值得動用，若且唯若：</div>
+                    <div class="text-amber-300 font-bold text-base">
+                        (0.95 − p) ÷ 8 &gt; 0.025 &nbsp;⇔&nbsp; <span class="text-cyan-300 underline decoration-wavy">p &lt; 75%</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SLIDE 7: 模型驗證、適用條件與研究局限 ==================== -->
+        <section id="slide-6" class="slide-panel hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-cyan-500 mb-1">Verification, Boundary Conditions & Limitations</div>
+                    <h2 class="text-2xl sm:text-3xl font-black">嚴格驗證、適用條件與研究局限</h2>
+                </div>
+                <div class="text-xs font-mono text-slate-500 dark:text-slate-400">
+                    確保決策前資訊邊界嚴密、無樣本洩漏、可完全重現
+                </div>
+            </div>
+
+            <!-- 頂部：四項嚴格驗證 + 資訊邊界/樣本分離 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800">
+                    <div class="w-8 h-8 rounded-lg bg-cyan-500/15 text-cyan-500 flex items-center justify-center font-bold mb-2">
+                        <i class="fa-solid fa-microscope"></i>
+                    </div>
+                    <div class="font-bold text-sm mb-1">1. 求解正確性 (全枚舉)</div>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        把人工名額在四類請求間分配的全部組合逐一枚舉（共 <strong class="font-mono text-cyan-500">9,911 種</strong>；<span class="font-mono">x1+x2+x3+x4 ≤ 20, x4 ≤ 10</span>），確認邊際排序解即為模型內的<strong>全局精確最優解</strong>，非貪心近似。
+                    </p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-500 flex items-center justify-center font-bold mb-2">
+                        <i class="fa-solid fa-chart-simple"></i>
+                    </div>
+                    <div class="font-bold text-sm mb-1">2. 成對統計檢定</div>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        C 與 B 在同一批 5,000 組資料成對比較：平均差 <strong class="font-mono text-emerald-500">+9.3 題</strong>（SD 3.4），95% 區間 <strong class="font-mono">[2, 16]</strong> 下限大於零，<strong class="font-mono">99.2%</strong> 批次中 C 勝出，證明差距非抽樣噪聲。
+                    </p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/15 text-amber-500 flex items-center justify-center font-bold mb-2">
+                        <i class="fa-solid fa-seedling"></i>
+                    </div>
+                    <div class="font-bold text-sm mb-1">3. 種子穩定性測試</div>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        更換四組隨機種子（<span class="font-mono">1, 7, 12345, 99999</span>）重跑 5,000 批，均值分別為 <strong class="font-mono text-amber-500">178.07、177.95、178.04、178.07</strong>，標準差穩定在 4.3，結果絕非單一種子巧合。
+                    </p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800">
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/15 text-purple-500 flex items-center justify-center font-bold mb-2">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div class="font-bold text-sm mb-1">4. 參數擾動與資訊邊界</div>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        成功率整體上下調 <strong class="font-mono">±5%</strong>，C 的最優配置完全不變（答對數 168.0 與 187.1）。且嚴格遵守<strong>決策前已知參數邊界</strong>，先定配置再抽樣，無偷看結果調參。
+                    </p>
+                </div>
+            </div>
+
+            <!-- 下方雙欄：四大適用條件 vs 五大研究局限 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 四大適用條件 -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <h3 class="font-bold text-base flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
+                        <i class="fa-solid fa-clipboard-check"></i> 模型落地的四大適用條件
+                    </h3>
+                    <ul class="space-y-2.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                        <li class="flex items-start gap-2.5">
+                            <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 font-mono font-bold text-xs shrink-0">條件 1</span>
+                            <span><strong>請求類型在配置前已知且當日穩定：</strong>若類型需處理後才知曉，前置靜態邊際排序將無法直接執行。</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 font-mono font-bold text-xs shrink-0">條件 2</span>
+                            <span><strong>各通道成功率估計誤差需夠小：</strong>若把例外案 AI 成功率從 50% 高估到 65%，人工相對優勢會被低估導致配置偏移。</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 font-mono font-bold text-xs shrink-0">條件 3</span>
+                            <span><strong>成本差（4元、12元）固定且無規模折扣：</strong>若大量採購 AI 算力具備階梯式折扣，邊際比值與排序將改寫。</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 font-mono font-bold text-xs shrink-0">條件 4</span>
+                            <span><strong>批量分配、不考慮排隊與重試：</strong>依題目設定排除動態排隊延遲，否則需在目標函數引入等待成本。</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 五大研究局限 -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <h3 class="font-bold text-base flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                        <i class="fa-solid fa-triangle-exclamation"></i> 誠實揭露：五大研究局限
+                    </h3>
+                    <ul class="space-y-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                        <li class="flex items-start gap-2.5">
+                            <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-mono font-bold text-xs shrink-0">局限 1</span>
+                            <span><strong>常數成功率漂移：</strong>真實平台會因政策更新或季節爭議發生分佈漂移，固定配置在漂移後可能失效。</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-mono font-bold text-xs shrink-0">局限 2</span>
+                            <span><strong>獨立性假設忽略重試：</strong>假設各件結果相互獨立，忽略同一用戶重複進線或客服經驗累積，可能低估長尾風險。</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-mono font-bold text-xs shrink-0">局限 3</span>
+                            <span><strong>未建模人工疲勞：</strong>20 件是數量上限而非質量上限，高強度審核下第 20 件的 95% 未必等於第 1 件的 95%。</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-mono font-bold text-xs shrink-0">局限 4</span>
+                            <span><strong>錯誤代價對稱假設：</strong>現實中例外案錯一次的客訴或法規代價遠高於簡單案，等代價假設會低估人工兜底價值。</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-mono font-bold text-xs shrink-0">局限 5</span>
+                            <span><strong>單軸情景變動：</strong>S1–S4 為單軸變動，若多軸同時變動（如預算下修且成功率改變）需重新執行排序求解。</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SLIDE 8: 全文配置總覽決策樹與 5 大行動建議 ==================== -->
+        <section id="slide-7" class="slide-panel hidden space-y-5">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-3">
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-emerald-500 mb-1">Decision Flowchart (Fig. 2) & Actionable Playbook</div>
+                    <h2 class="text-2xl sm:text-3xl font-black">全文配置總覽決策樹與給管理者的 5 大建議</h2>
+                </div>
+                <div class="text-xs font-semibold text-cyan-500">
+                    把研究模型轉化為平台日常營運的標準作業指南 (SOP)
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <!-- 左側：重現圖 2 全文配置總覽與平台日常決策樹 (7 cols) -->
+                <div class="lg:col-span-7 bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-5 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-sm sm:text-base flex items-center gap-2">
+                            <i class="fa-solid fa-sitemap text-cyan-500"></i>
+                            圖 2：全文配置總覽與平台日常決策流程
+                        </h3>
+                        <span class="text-[11px] font-mono text-slate-400">A→C 多 2.5 題 | B→C 多 9.3 題</span>
+                    </div>
+
+                    <!-- 流程圖視覺容器 -->
+                    <div class="space-y-2.5 text-xs">
+                        <!-- Step 1 & 2 -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div class="p-3 rounded-xl bg-blue-500/10 border border-blue-500/30">
+                                <div class="font-bold text-blue-600 dark:text-blue-300 mb-0.5">每日請求與資源限制</div>
+                                <div class="text-[11px] text-slate-600 dark:text-slate-300">
+                                    四類共 200 件 (單一80/多條件60/跨來源50/例外10)<br>
+                                    成本：直接1 / AI 5 / 人工13；預算 600、人工 ≤ 20
+                                </div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-slate-100 dark:bg-navy-950 border border-slate-300 dark:border-slate-800">
+                                <div class="font-bold text-slate-700 dark:text-slate-200 mb-0.5">任務 1：全部直接回答 (基準)</div>
+                                <div class="text-[11px] text-slate-600 dark:text-slate-300">
+                                    200 件全走直接回答；花 200 單位，剩 400 可買升級<br>
+                                    <strong class="text-cyan-500 font-mono">預期答對 155.0 題 (表 2)</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: A vs B 分支 -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 space-y-1.5">
+                                <div class="font-bold text-emerald-600 dark:text-emerald-300 flex justify-between">
+                                    <span>A 最佳零人工 (花 600)</span>
+                                    <span class="font-mono">預期 175.5 題</span>
+                                </div>
+                                <div class="text-[11px] text-slate-600 dark:text-slate-300">
+                                    直接 100 件；AI 升級 100 件 (跨來源50、例外10、多條件40)；人工 0 件
+                                </div>
+                                <div class="p-2 rounded-lg bg-amber-500/15 border border-amber-500/30 text-[11px]">
+                                    <strong class="text-amber-500">表 1 比較 (A → C 同為 600)：</strong><br>
+                                    • 10 件例外改交人工：+80 單位 (+4.5 題)<br>
+                                    • 20 件多條件改回直接：-80 單位 (-2.0 題)<br>
+                                    <strong class="font-mono text-emerald-400">→ 答對差：+2.5 題</strong>
+                                </div>
+                            </div>
+
+                            <div class="p-3 rounded-xl bg-slate-100 dark:bg-navy-950 border border-slate-300 dark:border-slate-800 space-y-1.5">
+                                <div class="font-bold text-blue-500 flex justify-between">
+                                    <span>B 固定20件人工 (花 600)</span>
+                                    <span class="font-mono">模擬 168.7 題</span>
+                                </div>
+                                <div class="text-[11px] text-slate-600 dark:text-slate-300">
+                                    人工 20 件；AI 升級 40 件 (多條件)；直接 140 件
+                                </div>
+                                <div class="p-2 rounded-lg bg-amber-500/15 border border-amber-500/30 text-[11px]">
+                                    <strong class="text-amber-500">表 5 比較 (B → C 同一批模擬)：</strong><br>
+                                    • C 最佳10件人工 vs B 固定20件人工<br>
+                                    • 168.7 → 178.0 題<br>
+                                    <strong class="font-mono text-cyan-400">→ 答對差：+9.3 題 (勝率 99.2%)</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: 匯聚至 C -->
+                        <div class="p-3.5 rounded-xl bg-gradient-to-r from-cyan-500/20 via-blue-500/15 to-cyan-500/20 border-2 border-cyan-500/50 text-center">
+                            <div class="font-black text-sm sm:text-base text-cyan-600 dark:text-cyan-300">
+                                ★ C 最佳10件人工（全局最優解）
+                            </div>
+                            <div class="text-xs text-slate-700 dark:text-slate-200 font-mono mt-0.5">
+                                人工 10 件 (例外) + AI 升級 70 件 (跨來源 50、多條件 20) + 直接 120 件 = 花 600 單位 → <strong>預期 178.0 題 (模擬 178.0 ± 4.3)</strong>
+                            </div>
+                        </div>
+
+                        <!-- Step 5: 平台今天怎麼做 -->
+                        <div class="pt-1">
+                            <div class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2 text-center">
+                                —— 平台今天怎麼做（三大日常應變劇本） ——
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+                                    <div class="font-bold text-emerald-500 mb-0.5">1. 平常一天 (預算 600)</div>
+                                    <div class="text-[11px] text-slate-600 dark:text-slate-300">
+                                        例外10→人工；跨來源50+多條件20→AI；其餘120→直接。<br>
+                                        <strong class="font-mono">花 600、答對 178.0 題</strong>
+                                    </div>
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-coral-500/10 border border-coral-500/30">
+                                    <div class="font-bold text-coral-400 mb-0.5">2. 預算減到 400 (S1)</div>
+                                    <div class="text-[11px] text-slate-600 dark:text-slate-300">
+                                        不派人工(太貴)；跨來源50→AI；其餘150→直接。<br>
+                                        <strong class="font-mono">花 400、答對 170.0 題</strong>
+                                    </div>
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/30">
+                                    <div class="font-bold text-purple-400 mb-0.5">3. 例外增到 40 件 (S3)</div>
+                                    <div class="text-[11px] text-slate-600 dark:text-slate-300">
+                                        20件→人工；另20件→直接(再升會超支680)；跨來源40→AI。<br>
+                                        <strong class="font-mono">花 600、答對 165.0 題</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右側：給平台管理者的 5 大行動建議 (5 cols) -->
+                <div class="lg:col-span-5 bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-3.5">
+                    <h3 class="font-bold text-base flex items-center gap-2 text-amber-500">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        給平台管理者的 5 大具體建議
+                    </h3>
+
+                    <div class="space-y-2.5 text-xs sm:text-sm">
+                        <div class="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border-l-4 border-cyan-500">
+                            <div class="font-bold text-slate-900 dark:text-white mb-0.5">1. 先用 C 取代 B（立即可見 +5.5% 提升）</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">
+                                同樣花 600 元多換 <strong class="font-mono text-cyan-500">+9.3 題</strong>，改動只是把人工名額集中到例外案（動用 10 件、閒置 10 件，因第 11 件起邊際報酬已低於多條件 AI 升級）。
+                            </p>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border-l-4 border-amber-500">
+                            <div class="font-bold text-slate-900 dark:text-white mb-0.5">2. 人工名額切忌平均分配（價值差 20 倍）</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">
+                                同樣一件人工，放在例外案每單位值 <strong class="font-mono text-amber-500">0.05 題/元</strong>，放在單一事實查詢只有 <strong class="font-mono">0.0025 題/元</strong>，相差整整 20 倍！
+                            </p>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border-l-4 border-emerald-500">
+                            <div class="font-bold text-slate-900 dark:text-white mb-0.5">3. 每季重估成功率並設「75% 人工退出線」</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">
+                                當例外案 AI 成功率升到約 <strong class="font-mono text-emerald-500">75%</strong> 時，人工在該通道的邊際報酬 (<span class="font-mono">0.20÷8=0.025</span>) 就與多條件 AI 升級同級，應即刻退出人工。
+                            </p>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border-l-4 border-coral-500">
+                            <div class="font-bold text-slate-900 dark:text-white mb-0.5">4. 預算下修時先砍人工、保跨來源 AI</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">
+                                預算降到 400 元時，最優解退化成 50 件跨來源綜合 AI 升級、零人工，仍可保住 <strong class="font-mono text-coral-400">170.0 題</strong>。
+                            </p>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border-l-4 border-purple-500">
+                            <div class="font-bold text-slate-900 dark:text-white mb-0.5">5. 驗證以「5 批 × 200 件」為一輪</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">
+                                單日標準差約 ±5 題，單日差距小於 5 題切勿輕易下結論，必須以多批成對均值進行 A/B 評估。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 底部控制列 (Bottom Navigation Bar) -->
+    <footer class="fixed bottom-0 left-0 right-0 z-40 h-14 bg-white/90 dark:bg-navy-900/90 glass-card border-t border-slate-200 dark:border-slate-800 px-4 lg:px-8 flex items-center justify-between">
+        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <span id="slide-counter" class="font-mono font-bold text-slate-800 dark:text-white bg-slate-200 dark:bg-slate-800 px-2.5 py-1 rounded-md">01 / 08</span>
+            <span id="slide-title-footer" class="hidden sm:inline font-medium truncate max-w-xs md:max-w-md">封面與核心摘要</span>
+        </div>
+
+        <!-- 圓點進度指示器 -->
+        <div id="dot-indicators" class="flex items-center gap-1.5">
+            <!-- JS 生成 -->
+        </div>
+
+        <!-- 上一頁 / 下一頁按鈕 -->
+        <div class="flex items-center gap-2">
+            <button onclick="prevSlide()" id="btn-prev" class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 disabled:opacity-40">
+                <i class="fa-solid fa-chevron-left text-xs"></i>
+                <span class="hidden sm:inline">上一頁</span>
+            </button>
+            <button onclick="nextSlide()" id="btn-next" class="px-3.5 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs sm:text-sm font-bold transition flex items-center gap-1.5">
+                <span class="hidden sm:inline">下一頁</span>
+                <i class="fa-solid fa-chevron-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- ==================== 互動式邊際排序模擬器 Modal ==================== -->
+    <div id="simulator-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs">
+        <div class="bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6 space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+                        <i class="fa-solid fa-sliders text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-lg">互動式邊際排序與最優配置模擬器</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">即時調整總預算、人工複核上限與例外案 AI 成功率，執行全枚舉精確求解</p>
+                    </div>
+                </div>
+                <button onclick="closeSimulatorModal()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- 快速情景預設按鈕 -->
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs font-bold text-slate-400 mr-1">快速載入報告情景：</span>
+                <button onclick="setSimPreset(600, 20, 50, 'base')" class="px-3 py-1 rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 text-xs font-bold transition">基準 C (600元 / 20人 / 例外AI 50%)</button>
+                <button onclick="setSimPreset(600, 0, 50, 'planA')" class="px-3 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-xs font-semibold transition">方案 A 最佳零人工 (175.5題)</button>
+                <button onclick="setSimPreset(400, 20, 50, 's1')" class="px-3 py-1 rounded-lg bg-coral-500/20 text-coral-400 hover:bg-coral-500/30 text-xs font-semibold transition">S1 減預算 (400元 → 170.0題)</button>
+                <button onclick="setSimPreset(600, 5, 50, 's2')" class="px-3 py-1 rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 text-xs font-semibold transition">S2 減人工 (5件 → 176.75題)</button>
+                <button onclick="setSimPreset(600, 20, 80, 's4')" class="px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 text-xs font-semibold transition">S4 AI變強 (例外AI 80% → 178.5題)</button>
+            </div>
+
+            <!-- 三個滑桿控制區 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-100 dark:bg-navy-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <div>
+                    <div class="flex justify-between text-xs font-bold mb-1.5">
+                        <span>每日總預算上限</span>
+                        <span id="sim-budget-val" class="font-mono text-cyan-400 text-sm">600 單位</span>
+                    </div>
+                    <input type="range" id="sim-budget" min="200" max="800" step="10" value="600" oninput="runInteractiveSim()" class="w-full">
+                    <div class="flex justify-between text-[10px] text-slate-400 font-mono mt-1">
+                        <span>200 (全直接)</span><span>400 (S1)</span><span>600 (基準)</span><span>800</span>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-xs font-bold mb-1.5">
+                        <span>人工複核名額上限</span>
+                        <span id="sim-human-val" class="font-mono text-amber-400 text-sm">20 件</span>
+                    </div>
+                    <input type="range" id="sim-human" min="0" max="30" step="1" value="20" oninput="runInteractiveSim()" class="w-full">
+                    <div class="flex justify-between text-[10px] text-slate-400 font-mono mt-1">
+                        <span>0 (方案A)</span><span>5 (S2)</span><span>10 (C實際)</span><span>20 (基準)</span><span>30</span>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-xs font-bold mb-1.5">
+                        <span>例外案 AI 升級成功率 (p)</span>
+                        <span id="sim-exc-val" class="font-mono text-emerald-400 text-sm">50%</span>
+                    </div>
+                    <input type="range" id="sim-exc" min="35" max="95" step="5" value="50" oninput="runInteractiveSim()" class="w-full">
+                    <div class="flex justify-between text-[10px] text-slate-400 font-mono mt-1">
+                        <span>35%</span><span>50% (基準)</span><span>75% (退出線)</span><span>95%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 即時計算結果展示 -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30">
+                    <div class="text-xs text-slate-400">最優預期答對題數</div>
+                    <div id="sim-out-score" class="text-2xl font-black font-mono text-cyan-400">178.00 題</div>
+                    <div id="sim-out-gain" class="text-[11px] font-mono text-emerald-400">較全直接 +23.00 題</div>
+                </div>
+                <div class="p-3.5 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-slate-800">
+                    <div class="text-xs text-slate-400">實際動用預算</div>
+                    <div id="sim-out-cost" class="text-2xl font-black font-mono">600 單位</div>
+                    <div id="sim-out-roi" class="text-[11px] font-mono text-slate-400">每元答對 0.297 題</div>
+                </div>
+                <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30">
+                    <div class="text-xs text-slate-400">實際動用人工名額</div>
+                    <div id="sim-out-hused" class="text-2xl font-black font-mono text-amber-400">10 件</div>
+                    <div id="sim-out-hidle" class="text-[11px] font-mono text-slate-400">閒置 10 件名額</div>
+                </div>
+                <div class="p-3.5 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-slate-800">
+                    <div class="text-xs text-slate-400">例外案人工相對AI邊際</div>
+                    <div id="sim-out-margin" class="text-2xl font-black font-mono text-emerald-400">0.0563</div>
+                    <div id="sim-out-status" class="text-[11px] font-bold text-emerald-400">＞0.025 (人工優先)</div>
+                </div>
+            </div>
+
+            <!-- 動態配置明細表 -->
+            <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+                <table class="w-full text-left border-collapse text-xs sm:text-sm font-mono">
+                    <thead>
+                        <tr class="bg-slate-100 dark:bg-navy-950 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 font-sans">
+                            <th class="py-2.5 px-4">請求類型 (每日件數)</th>
+                            <th class="py-2.5 px-3 text-center">直接回答 (1元)</th>
+                            <th class="py-2.5 px-3 text-center text-cyan-400">AI 升級 (5元)</th>
+                            <th class="py-2.5 px-3 text-center text-amber-400">人工複核 (13元)</th>
+                            <th class="py-2.5 px-4 text-right">期望答對題數</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sim-table-body" class="divide-y divide-slate-200 dark:divide-slate-800">
+                        <!-- JS 動態渲染 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 參考文獻與附錄驗算說明 Modal ==================== -->
+    <div id="ref-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs">
+        <div class="bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-4xl w-full max-h-[88vh] overflow-y-auto shadow-2xl p-6 space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-book-bookmark text-cyan-500 text-xl"></i>
+                    <h3 class="font-black text-lg">參考文獻 (References) 與附錄模擬驗算說明</h3>
+                </div>
+                <button onclick="closeRefModal()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs sm:text-sm">
+                <div class="p-4 rounded-2xl bg-slate-100 dark:bg-navy-950 space-y-2">
+                    <div class="font-bold text-cyan-500">附錄：關鍵數字的一致性檢查與可重現性 (Python + NumPy, Seed 2027)</div>
+                    <ul class="space-y-1 font-mono text-xs text-slate-600 dark:text-slate-300">
+                        <li>1. 全部直接回答：80×0.95 + 60×0.80 + 50×0.55 + 10×0.35 = 76 + 48 + 27.5 + 3.5 = <strong>155.0 題</strong> (成本 200×1 = 200)。</li>
+                        <li>2. C 最佳10件人工成本：80×1 + 40×1 + 20×5 + 50×5 + 10×13 = 80 + 40 + 100 + 250 + 130 = <strong>600 單位</strong>。</li>
+                        <li>3. C 最佳10件人工答對：76.0 (單一直) + 32.0 (多條件直) + 18.0 (多條件AI) + 42.5 (跨來源AI) + 9.5 (例外人工) = <strong>178.0 題</strong>。</li>
+                        <li>4. B → C 差距：178.0 − 168.7 = <strong>9.3 題</strong> (5,000 批成對比較標準差 3.4，95% 區間 [2, 16])。</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="font-bold text-amber-500">參考文獻與生成式 AI 使用揭露 [1]–[11]</div>
+                    <ol class="space-y-1.5 text-xs text-slate-600 dark:text-slate-300 list-decimal list-inside">
+                        <li><strong>Klarna.</strong> (27 Feb 2024). Klarna AI assistant handles two-thirds of customer service chats in its first month.</li>
+                        <li><strong>Reuters.</strong> (10 Sep 2025). Europe's AI poster child Klarna taps the brakes on chatbots. Republished by WHBL.</li>
+                        <li><strong>Chen, L., Zaharia, M., & Zou, J.</strong> (2023). FrugalGPT: How to Use Large Language Models While Reducing Cost and Improving Performance. <em>arXiv:2305.05176</em>.</li>
+                        <li><strong>Mozannar, H., & Sontag, D.</strong> (2020). Consistent Estimators for Learning to Defer to an Expert. <em>ICML, PMLR 119</em>, 7076–7087.</li>
+                        <li><strong>Vaccaro, M., Almaatouq, A., & Malone, T.</strong> (2024). When combinations of humans and AI are useful: A systematic review and meta-analysis. <em>Nature Human Behaviour</em>, 8, 2293–2303.</li>
+                        <li><strong>Martian.</strong> RouterBench dataset and documentation.</li>
+                        <li><strong>Ong, I., Wu, V., Chiang, W.-L., et al.</strong> (2024). RouteLLM: Learning to Route LLMs with Preference Data. <em>arXiv:2406.18665</em>.</li>
+                        <li><strong>Ding, D., Mallick, A., Wang, C., et al.</strong> (2024). Hybrid LLM: Cost-Efficient and Quality-Aware Query Routing. <em>ICLR 2024, arXiv:2404.14618</em>.</li>
+                        <li><strong>Verma, R., Barrejón, D., & Nalisnick, E.</strong> (2023). Learning to Defer to Multiple Experts: Consistent Surrogate Losses, Confidence Calibration, and Conformal Ensembles. <em>AISTATS 2023, PMLR 206</em>, 7694–7722.</li>
+                        <li><strong>Alves, J. V., Leitão, D., Jesus, S., et al.</strong> (2024). Cost-Sensitive Learning to Defer to Multiple Experts with Workload Constraints. <em>TMLR, arXiv:2403.06906</em>.</li>
+                        <li><strong>生成式 AI 使用揭露：</strong>本團隊在撰寫與實作過程中使用生成式 AI 助理（DeepSeek Harness）整理參數表格、潤飾文字與協助除錯模擬程式。所有數值均由團隊以程式重跑核對，無 AI 生成之題目以外數據。</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript 簡報控制與模擬器核心邏輯 -->
+    <script>
+        const slidesData = [
+            { id: 0, short: "01 摘要", title: "封面與核心摘要 (Executive Summary)", icon: "fa-house" },
+            { id: 1, short: "02 邊際報酬", title: "任務 1：全部直接回答基準與邊際報酬排序", icon: "fa-arrow-up-right-dots" },
+            { id: 2, short: "03 最優方案C", title: "任務 2：最優配置模型與結果 (C 最佳10件人工)", icon: "fa-award" },
+            { id: 3, short: "04 A與C對決", title: "邊際轉換對決：為何 C 勝過 A？與三方案比較", icon: "fa-scale-balanced" },
+            { id: 4, short: "05 模擬對比", title: "任務 3：5,000 批情境模擬與基準對比", icon: "fa-chart-column" },
+            { id: 5, short: "06 情景分析", title: "情景分析：四個變動軸 (S1–S4) 與 75% 退出線", icon: "fa-compass" },
+            { id: 6, short: "07 驗證與局限", title: "模型嚴格驗證、適用條件與研究局限", icon: "fa-shield-check" },
+            { id: 7, short: "08 決策與建議", title: "全文配置總覽決策樹與給管理者的 5 大建議", icon: "fa-sitemap" }
+        ];
+
+        let currentSlide = 0;
+        const totalSlides = slidesData.length;
+
+        function initNavigation() {
+            const pillNav = document.getElementById('top-pill-nav');
+            const drawerList = document.getElementById('drawer-list');
+            const dotIndicators = document.getElementById('dot-indicators');
+
+            pillNav.innerHTML = '';
+            drawerList.innerHTML = '';
+            dotIndicators.innerHTML = '';
+
+            slidesData.forEach((s, idx) => {
+                // Top Pills
+                const pill = document.createElement('button');
+                pill.id = `pill-${idx}`;
+                pill.onclick = () => goToSlide(idx);
+                pill.className = `px-2.5 py-1 rounded-lg text-xs font-semibold transition ${idx === currentSlide ? 'bg-cyan-500 text-slate-950 font-bold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`;
+                pill.textContent = s.short;
+                pillNav.appendChild(pill);
+
+                // Drawer Item
+                const item = document.createElement('button');
+                item.id = `drawer-item-${idx}`;
+                item.onclick = () => { goToSlide(idx); toggleDrawer(false); };
+                item.className = `w-full text-left px-3.5 py-2.5 rounded-xl text-xs sm:text-sm flex items-center gap-3 transition ${idx === currentSlide ? 'bg-cyan-500/15 text-cyan-500 font-bold border border-cyan-500/30' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'}`;
+                item.innerHTML = `<span class="w-6 h-6 rounded-lg bg-slate-200 dark:bg-navy-950 flex items-center justify-center font-mono text-xs">${idx + 1}</span><span class="truncate">${s.title}</span>`;
+                drawerList.appendChild(item);
+
+                // Bottom Dots
+                const dot = document.createElement('button');
+                dot.id = `dot-${idx}`;
+                dot.onclick = () => goToSlide(idx);
+                dot.title = s.title;
+                dot.className = `h-2 rounded-full transition-all ${idx === currentSlide ? 'w-7 bg-cyan-500' : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400'}`;
+                dotIndicators.appendChild(dot);
+            });
+        }
+
+        function goToSlide(index) {
+            if (index < 0 || index >= totalSlides) return;
+            document.querySelectorAll('.slide-panel').forEach((el, idx) => {
+                if (idx === index) {
+                    el.classList.remove('hidden');
+                    el.classList.remove('slide-enter');
+                    void el.offsetWidth; // 觸發重繪動畫
+                    el.classList.add('slide-enter');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+
+            currentSlide = index;
+            updateNavUI();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateNavUI() {
+            const pct = ((currentSlide + 1) / totalSlides) * 100;
+            document.getElementById('progress-bar').style.width = `${pct}%`;
+            document.getElementById('slide-counter').textContent = `0${currentSlide + 1} / 0${totalSlides}`;
+            document.getElementById('slide-title-footer').textContent = slidesData[currentSlide].title;
+
+            document.getElementById('btn-prev').disabled = currentSlide === 0;
+            document.getElementById('btn-next').disabled = currentSlide === totalSlides - 1;
+
+            slidesData.forEach((_, idx) => {
+                const pill = document.getElementById(`pill-${idx}`);
+                const drawerItem = document.getElementById(`drawer-item-${idx}`);
+                const dot = document.getElementById(`dot-${idx}`);
+
+                if (pill) {
+                    pill.className = `px-2.5 py-1 rounded-lg text-xs font-semibold transition ${idx === currentSlide ? 'bg-cyan-500 text-slate-950 font-bold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`;
+                }
+                if (drawerItem) {
+                    drawerItem.className = `w-full text-left px-3.5 py-2.5 rounded-xl text-xs sm:text-sm flex items-center gap-3 transition ${idx === currentSlide ? 'bg-cyan-500/15 text-cyan-500 font-bold border border-cyan-500/30' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'}`;
+                }
+                if (dot) {
+                    dot.className = `h-2 rounded-full transition-all ${idx === currentSlide ? 'w-7 bg-cyan-500' : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400'}`;
+                }
+            });
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) goToSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) goToSlide(currentSlide - 1);
+        }
+
+        function toggleDrawer(forceState) {
+            const drawer = document.getElementById('drawer');
+            const backdrop = document.getElementById('drawer-backdrop');
+            const isOpen = !drawer.classList.contains('-translate-x-full');
+            const nextState = typeof forceState === 'boolean' ? forceState : !isOpen;
+
+            if (nextState) {
+                drawer.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+            } else {
+                drawer.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            html.classList.toggle('dark');
+            if (html.classList.contains('dark')) {
+                icon.className = 'fa-solid fa-sun text-amber-400';
+            } else {
+                icon.className = 'fa-solid fa-moon text-slate-700';
+            }
+        }
+
+        function toggleFullscreen() {
+            const icon = document.getElementById('fs-icon');
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+                icon.className = 'fa-solid fa-compress';
+            } else {
+                document.exitFullscreen().catch(() => {});
+                icon.className = 'fa-solid fa-expand';
+            }
+        }
+
+        function openSimulatorModal() {
+            document.getElementById('simulator-modal').classList.remove('hidden');
+            runInteractiveSim();
+        }
+        function closeSimulatorModal() {
+            document.getElementById('simulator-modal').classList.add('hidden');
+        }
+        function openRefModal() {
+            document.getElementById('ref-modal').classList.remove('hidden');
+        }
+        function closeRefModal() {
+            document.getElementById('ref-modal').classList.add('hidden');
+        }
+
+        // ==================== 互動式邊際排序模擬器演算法 ====================
+        function setSimPreset(budget, humanCap, excAiPct) {
+            document.getElementById('sim-budget').value = budget;
+            document.getElementById('sim-human').value = humanCap;
+            document.getElementById('sim-exc').value = excAiPct;
+            runInteractiveSim();
+        }
+
+        function runInteractiveSim() {
+            const budgetCap = parseInt(document.getElementById('sim-budget').value, 10);
+            const humanCap = parseInt(document.getElementById('sim-human').value, 10);
+            const excAiRate = parseInt(document.getElementById('sim-exc').value, 10) / 100;
+
+            document.getElementById('sim-budget-val').textContent = `${budgetCap} 單位`;
+            document.getElementById('sim-human-val').textContent = `${humanCap} 件`;
+            document.getElementById('sim-exc-val').textContent = `${Math.round(excAiRate * 100)}%`;
+
+            // 固定請求參數
+            const types = [
+                { name: '單一事實查詢', n: 80, pD: 0.95, pA: 0.97, pH: 0.98 },
+                { name: '多條件查詢',   n: 60, pD: 0.80, pA: 0.90, pH: 0.95 },
+                { name: '跨來源綜合',   n: 50, pD: 0.55, pA: 0.85, pH: 0.92 },
+                { name: '例外情形',     n: 10, pD: 0.35, pA: excAiRate, pH: 0.95 }
+            ];
+
+            // 枚舉或邊際精確求解 (因每類請求內部線性，對人工名額分配做搜尋並搭配 AI 升級邊際排序)
+            // 為確保極速與 100% 精確，我們對 4 類的人工件數 (h0, h1, h2, h3) 進行枚舉，剩餘預算按 AI 邊際報酬由高到低填滿
+            let bestScore = -1;
+            let bestAlloc = null;
+
+            const maxH3 = Math.min(10, humanCap);
+            for (let h3 = 0; h3 <= maxH3; h3++) {
+                const remH2 = Math.min(50, humanCap - h3);
+                for (let h2 = 0; h2 <= remH2; h2++) {
+                    const remH1 = Math.min(60, humanCap - h3 - h2);
+                    for (let h1 = 0; h1 <= remH1; h1++) {
+                        const remH0 = Math.min(80, humanCap - h3 - h2 - h1);
+                        // 由於單一事實人工邊際最低，只測試 h0 = 0 或可能剩餘值 (加快速度並保持精確)
+                        for (let h0 = 0; h0 <= Math.min(remH0, 10); h0++) {
+                            const hArr = [h0, h1, h2, h3];
+                            const humanCostExtra = (h0 + h1 + h2 + h3) * 12;
+                            const availForAI = budgetCap - 200 - humanCostExtra;
+                            if (availForAI < 0) continue;
+
+                            let remBudget = availForAI;
+                            // AI 候選按每單位增量排序
+                            const aiCandidates = [0, 1, 2, 3].map(idx => ({
+                                idx,
+                                maxUnits: types[idx].n - hArr[idx],
+                                gainPerCost: (types[idx].pA - types[idx].pD) / 4
+                            })).sort((a, b) => b.gainPerCost - a.gainPerCost);
+
+                            const aArr = [0, 0, 0, 0];
+                            for (const cand of aiCandidates) {
+                                if (cand.gainPerCost <= 0) continue;
+                                const canBuy = Math.min(cand.maxUnits, Math.floor(remBudget / 4));
+                                aArr[cand.idx] = canBuy;
+                                remBudget -= canBuy * 4;
+                            }
+
+                            let score = 0;
+                            const dArr = [0, 0, 0, 0];
+                            for (let i = 0; i < 4; i++) {
+                                dArr[i] = types[i].n - hArr[i] - aArr[i];
+                                score += dArr[i] * types[i].pD + aArr[i] * types[i].pA + hArr[i] * types[i].pH;
+                            }
+
+                            if (score > bestScore + 1e-9) {
+                                bestScore = score;
+                                bestAlloc = { dArr, aArr, hArr };
+                            }
+                        }
+                    }
+                }
+            }
+
+            const totalH = bestAlloc.hArr.reduce((a, b) => a + b, 0);
+            const totalA = bestAlloc.aArr.reduce((a, b) => a + b, 0);
+            const totalD = bestAlloc.dArr.reduce((a, b) => a + b, 0);
+            const totalCost = totalD * 1 + totalA * 5 + totalH * 13;
+
+            document.getElementById('sim-out-score').textContent = `${bestScore.toFixed(2)} 題`;
+            document.getElementById('sim-out-gain').textContent = `較全直接 (155.0) +${(bestScore - 155).toFixed(2)} 題`;
+            document.getElementById('sim-out-cost').textContent = `${totalCost} 單位`;
+            document.getElementById('sim-out-roi').textContent = `每元答對 ${(bestScore / totalCost).toFixed(3)} 題`;
+            document.getElementById('sim-out-hused').textContent = `${totalH} 件`;
+            document.getElementById('sim-out-hidle').textContent = `閒置 ${humanCap - totalH} 件名額`;
+
+            const excRelMargin = (0.95 - excAiRate) / 8;
+            document.getElementById('sim-out-margin').textContent = excRelMargin.toFixed(4);
+            const statusEl = document.getElementById('sim-out-status');
+            if (excRelMargin > 0.025) {
+                statusEl.textContent = '＞ 0.025 (人工優先於多條件AI)';
+                statusEl.className = 'text-[11px] font-bold text-emerald-400';
+            } else if (Math.abs(excRelMargin - 0.025) < 1e-5) {
+                statusEl.textContent = '＝ 0.025 (達 75% 臨界退出線)';
+                statusEl.className = 'text-[11px] font-bold text-amber-400';
+            } else {
+                statusEl.textContent = '＜ 0.025 (人工應退出該通道)';
+                statusEl.className = 'text-[11px] font-bold text-coral-400';
+            }
+
+            // 渲染表格
+            const tbody = document.getElementById('sim-table-body');
+            tbody.innerHTML = '';
+            types.forEach((t, i) => {
+                const d = bestAlloc.dArr[i];
+                const a = bestAlloc.aArr[i];
+                const h = bestAlloc.hArr[i];
+                const subScore = d * t.pD + a * t.pA + h * t.pH;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2.5 px-4 font-sans font-semibold">${t.name} <span class="text-xs text-slate-400 font-mono">(${t.n}件)</span></td>
+                    <td class="py-2.5 px-3 text-center ${d > 0 ? 'font-bold' : 'text-slate-400'}">${d}</td>
+                    <td class="py-2.5 px-3 text-center ${a > 0 ? 'font-bold text-cyan-400' : 'text-slate-400'}">${a}</td>
+                    <td class="py-2.5 px-3 text-center ${h > 0 ? 'font-bold text-amber-400' : 'text-slate-400'}">${h}</td>
+                    <td class="py-2.5 px-4 text-right font-bold">${subScore.toFixed(2)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 鍵盤導覽支援
+        window.addEventListener('keydown', (e) => {
+            const simOpen = !document.getElementById('simulator-modal').classList.contains('hidden');
+            const refOpen = !document.getElementById('ref-modal').classList.contains('hidden');
+
+            if (e.key === 'Escape') {
+                closeSimulatorModal();
+                closeRefModal();
+                toggleDrawer(false);
+                return;
+            }
+            if (simOpen || refOpen) return;
+
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 's' || e.key === 'S') {
+                e.preventDefault();
+                openSimulatorModal();
+            }
+        });
+
+        window.onload = function() {
+            initNavigation();
+            updateNavUI();
+        };
+    </script>
+</body>
+</html>
